@@ -71,20 +71,17 @@ def pick_device():
 MODEL_ID = "stutid04/mbic-distilbert-bias"
 @st.cache_resource(show_spinner=True)
 def load_classifier():
+    st.write("Loading tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
-    model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID)
-
-    model.config.id2label = {0: "Non-biased", 1: "Biased"}
-    model.config.label2id = {"Non-biased": 0, "Biased": 1}
-
-    device = pick_device()
+    st.write("Loading model")
+    model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID , low_cpu_mem_usage=True, cache_dir="/tmp/hf_cache")
+    st.write("creating pipeline:")
 
     clf = pipeline(
         "text-classification",
         model=model,
         tokenizer=tokenizer,
-        device=device,
-        return_all_scores=True
+        device=-1
     )
 
     return clf
