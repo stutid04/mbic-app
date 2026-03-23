@@ -61,11 +61,6 @@ h1,h2,h3,h4 { color: #e6edf3; }
 """, unsafe_allow_html=True)
 
 # ---------------- Model ----------------
-MODEL_DIR = "out/distilbert-mbic-binary/best"
-if not os.path.exists(MODEL_DIR):
-    st.error("❌ Model not found at `out/distilbert-mbic-binary/best`. Train & save before running the UI.")
-    st.stop()
-
 def pick_device():
     try:
         if getattr(torch.backends, "mps", None) and torch.backends.mps.is_available():
@@ -73,18 +68,29 @@ def pick_device():
     except Exception:
         pass
     return -1  # CPU
-
+MODEL_ID = "stutid04/mbic-distilbert-bias"
 @st.cache_resource(show_spinner=True)
 def load_classifier():
-    tok = AutoTokenizer.from_pretrained(MODEL_DIR)
-    tok.model_input_names = ["input_ids", "attention_mask"]
-    model = AutoModelForSequenceClassification.from_pretrained(MODEL_DIR)
+   tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+    model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID)
+
     model.config.id2label = {0: "Non-biased", 1: "Biased"}
     model.config.label2id = {"Non-biased": 0, "Biased": 1}
-    device = pick_device()
-    return pipeline("text-classification", model=model, tokenizer=tok, device=device, top_k=None)
 
-clf = load_classifier() 
+    device = pick_device()
+
+    clf = pipeline(
+        "text-classification",
+        model=model,
+        tokenizer=tokenizer,
+        device=device,
+        return_all_scores=True
+    )
+
+    return clf
+
+
+clf = load_classifier()
 
 # ---------------- Helpers ----------------
 def normalize_scores(raw):
@@ -144,7 +150,7 @@ def stat_tile(label: str, value: str):
 # ---- NewsAPI fetch with graceful offline banner
 def fetch_news(q, sort_by="publishedAt", page_size=10):
     """Return (articles, status). status ∈ {'ok','offline'}."""
-    key = st.secrets.get("NEWSAPI_KEY", "")
+    key = os.getenv("NEWSAPI_KEY") or st.secrets.get("NEWSAPI_KEY", "")
     if not key:
         return [], "offline"
     try:
