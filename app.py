@@ -71,7 +71,7 @@ def pick_device():
 MODEL_ID = "stutid04/mbic-distilbert-bias"
 @st.cache_resource(show_spinner=True)
 def load_classifier():
-   tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
     model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID)
 
     model.config.id2label = {0: "Non-biased", 1: "Biased"}
