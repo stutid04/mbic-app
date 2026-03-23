@@ -74,7 +74,7 @@ def load_classifier():
     st.write("Loading tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
     st.write("Loading model")
-    model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID , low_cpu_mem_usage=True, cache_dir="/tmp/hf_cache")
+    model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID , low_cpu_mem_usage=True, torch_dtype="auto")
     st.write("creating pipeline:")
 
     clf = pipeline(
